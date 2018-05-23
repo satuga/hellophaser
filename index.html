@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Prototype Game</title>
+        <script type='text/javascript' src='phaser.min.js'></script>
+        <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+    var platforms;
+    var player;
+    var entities;
+    var hitPlatform;
+    var exists = false;
+    var fired = false;
+    var test;
+
+    function preload() 
+    {
+
+    game.load.image('sky', 'assets/sky.png');
+    game.load.image('ground', 'assets/platform.png');
+    game.load.image('star', 'assets/star.png');
+    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+
+    }
+
+    function create() 
+    {
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        game.add.sprite(0, 0, 'sky');
+
+        entities = game.add.group();
+        entities.enableBody = true;
+        game.physics.arcade.enable(entities);
+
+        platforms = game.add.group();
+        platforms.enableBody = true;
+
+        var ground = platforms.create(0, game.world.height - 64, 'ground');
+        ground.scale.setTo(2, 2);
+        ground.body.immovable = true;
+
+        var ledge = platforms.create(400, 400, 'ground');
+        ledge.body.immovable = true;
+        ledge = platforms.create(-150, 250, 'ground');
+        ledge.body.immovable = true;
+
+    }
+
+    function update() 
+    {
+
+
+		window.addEventListener('keydown', function(event)
+		{
+		    if(!fired) 
+		    {
+		        fired = true;
+				switch (event.key)
+		      	{
+		     		case "x": // Left
+			  			spawnPlayerLeft();
+			 			exists = true;
+						break;
+
+		           	case "y": // Left
+		         		console.log("hi2");
+		        		break;
+		        }
+		    }
+		});
+
+		window.addEventListener('keyup', function(event)
+		{
+		    fired = false;
+		});
+
+        hitPlatform = game.physics.arcade.collide(entities, platforms);
+
+        if(exists)
+        {
+            if(entities.getAt(0).body.x > 500)
+            {
+                var temp = entities.getAt(0);
+                temp.destroy();
+                if (entities.countLiving() == 0)
+                {
+                    exists = false;
+                }
+            }
+        }
+
+       console.log(entities.countLiving());
+
+
+    }
+
+    function spawnPlayerLeft()
+    {
+        player = game.add.sprite(0,game.world.height-200, 'dude');
+        player.enableBody = true;
+        game.physics.arcade.enable(player);
+        player.animations.add('right', [5, 6, 7, 8], 10, true);
+        player.animations.play('right');
+        player.body.velocity.x = 150;
+        player.body.bounce.y = 0.2;
+        player.body.gravity.y = 300;
+        player.body.collideWorldBounds = true;
+        entities.add(player);
+        exists = true;
+    }
+
+    </script>
+
+
+    </body>
+</html>
