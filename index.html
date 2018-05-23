@@ -15,8 +15,9 @@
     var platforms;
     var player;
     var entities;
+    var entities2;
     var hitPlatform;
-    var exists = false;
+    var hitPlatform2;
     var fired = false;
     var test;
 
@@ -38,6 +39,10 @@
         entities = game.add.group();
         entities.enableBody = true;
         game.physics.arcade.enable(entities);
+
+        entities2 = game.add.group();
+        entities2.enableBody = true;
+        game.physics.arcade.enable(entities2);
 
         platforms = game.add.group();
         platforms.enableBody = true;
@@ -66,11 +71,10 @@
 		      	{
 		     		case "x": // Left
 			  			spawnPlayerLeft();
-			 			exists = true;
 						break;
 
-		           	case "y": // Left
-		         		console.log("hi2");
+		           	case "y": // Right
+		         		spawnPlayerRight();
 		        		break;
 		        }
 		    }
@@ -82,21 +86,26 @@
 		});
 
         hitPlatform = game.physics.arcade.collide(entities, platforms);
+        hitPlatform2 = game.physics.arcade.collide(entities2, platforms);
 
-        if(exists)
+        if(entities.countLiving() > 0)
         {
-            if(entities.getAt(0).body.x > 500)
+            if(entities.getAt(0).body.x > game.world.width-50)
             {
                 var temp = entities.getAt(0);
                 temp.destroy();
-                if (entities.countLiving() == 0)
-                {
-                    exists = false;
-                }
             }
         }
 
-       console.log(entities.countLiving());
+        if (entities2.countLiving() > 0)
+        {
+        	if(entities2.getAt(0).body.x < 10)
+        	{
+        		var temp = entities2.getAt(0);
+        		temp.destroy();
+        	}
+
+       	}
 
 
     }
@@ -113,7 +122,20 @@
         player.body.gravity.y = 300;
         player.body.collideWorldBounds = true;
         entities.add(player);
-        exists = true;
+    }
+
+    function spawnPlayerRight()
+    {
+    	player = game.add.sprite(game.world.width-50,game.world.height-300, 'dude');
+    	player.enableBody = true ;
+    	game.physics.arcade.enable(player);
+    	player.animations.add('left', [3, 2, 1, 0], 10, true);
+    	player.animations.play( 'left' );
+    	player.body.velocity.x = -150;
+    	player.body.bounce.y = 0.2;
+    	player.body.gravity.y = 300 ;
+    	player.body.collideWorldBounds = true ;
+    	entities2.add(player); 
     }
 
     </script>
