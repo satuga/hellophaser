@@ -4,13 +4,14 @@
         <meta charset="UTF-8" />
         <title>Prototype Game</title>
         <script type='text/javascript' src='phaser.min.js'></script>
+        <script type='text/javascript' src='HealthBar.standalone.js'></script>
         <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     </head>
     <body>
 
     <script type="text/javascript">
 
-    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(1600, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
     var platforms;
     var player;
@@ -18,23 +19,37 @@
     var entities2;
     var hitPlatform;
     var hitPlatform2;
+    var colentitiesentities2;
+    var colentitiestower;
+    var colentities2tower;
     var fired = false;
     var test;
+    var towers1;
+    var towers2;
+    var tower;
+    var barConfig;
+    var healthbar1;
+    var healthbar2;
+    var healthbar1Num = 100;
+    var healthbar2Num = 100;
 
     function preload() 
     {
 
-    game.load.image('sky', 'assets/sky.png');
+    game.load.image('sky', 'assets/background.jpg');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.image('tower1', 'assets/base1.png');
+    game.load.image('tower2', 'assets/base2.png');
 
     }
 
     function create() 
     {
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        game.add.sprite(0, 0, 'sky');
+        var sky = game.add.sprite(0, 0, 'sky');
+        sky.scale.setTo(2.5,1);
 
         entities = game.add.group();
         entities.enableBody = true;
@@ -44,23 +59,33 @@
         entities2.enableBody = true;
         game.physics.arcade.enable(entities2);
 
+        towers1 = game.add.group();
+        towers1.enableBody = true;
+        game.physics.arcade.enable(towers1);
+
+        towers2 = game.add.group();
+        towers2.enableBody = true;
+        game.physics.arcade.enable(towers2);
+
         platforms = game.add.group();
         platforms.enableBody = true;
 
-        var ground = platforms.create(0, game.world.height - 64, 'ground');
-        ground.scale.setTo(2, 2);
+        var ground = platforms.create(0, game.world.height - 30, 'ground');
+        ground.scale.setTo(4, 2);
         ground.body.immovable = true;
 
-        var ledge = platforms.create(400, 400, 'ground');
-        ledge.body.immovable = true;
-        ledge = platforms.create(-150, 250, 'ground');
-        ledge.body.immovable = true;
+        createTower1(game.world.width - 130,game.world.height-250);
+        createTower2(0,game.world.height-250);
+
+        barConfig = {width: 100, height: 10, x: 60, y: game.world.height-280, bg: {color: '#651828'}, bar: {color: '#00ff00'}, animationDuration: 200, flipped: false};
+        healthbar1 = new HealthBar(this.game, barConfig);
+        healthbar2 = new HealthBar(this.game, barConfig);
+        healthbar2.setPosition(game.world.width - 55,game.world.height-280);
 
     }
 
     function update() 
     {
-
 
 		window.addEventListener('keydown', function(event)
 		{
@@ -87,32 +112,40 @@
 
         hitPlatform = game.physics.arcade.collide(entities, platforms);
         hitPlatform2 = game.physics.arcade.collide(entities2, platforms);
+        colentitiesentities2 = game.physics.arcade.collide(entities,entities2);
+        colentitiestower = game.physics.arcade.collide(entities2,towers2);
+        colentities2tower = game.physics.arcade.collide(entities,towers1);
 
-        if(entities.countLiving() > 0)
+        if(colentitiestower)
         {
-            if(entities.getAt(0).body.x > game.world.width-50)
-            {
-                var temp = entities.getAt(0);
-                temp.destroy();
-            }
+            despawnRight();
+            healthbar1Num -= 10;
+            healthbar1.setPercent(healthbar1Num);
         }
 
-        if (entities2.countLiving() > 0)
+        if(colentities2tower)
         {
-        	if(entities2.getAt(0).body.x < 10)
-        	{
-        		var temp = entities2.getAt(0);
-        		temp.destroy();
-        	}
+            despawnLeft();
+            healthbar2Num -= 10;
+            healthbar2.setPercent(healthbar2Num);
+        }
 
-       	}
+        if(colentitiesentities2)
+        {
+            despawnRight();
+            despawnLeft();
+        }
 
+        if(healthbar1Num <0 || healthbar2Num <= 0)
+        {
+            game.world.removeAll();
+        }
 
     }
 
     function spawnPlayerLeft()
     {
-        player = game.add.sprite(0,game.world.height-200, 'dude');
+        player = game.add.sprite(0,game.world.height-100, 'dude');
         player.enableBody = true;
         game.physics.arcade.enable(player);
         player.animations.add('right', [5, 6, 7, 8], 10, true);
@@ -126,7 +159,7 @@
 
     function spawnPlayerRight()
     {
-    	player = game.add.sprite(game.world.width-50,game.world.height-300, 'dude');
+    	player = game.add.sprite(game.world.width-40,game.world.height-100, 'dude');
     	player.enableBody = true ;
     	game.physics.arcade.enable(player);
     	player.animations.add('left', [3, 2, 1, 0], 10, true);
@@ -136,6 +169,36 @@
     	player.body.gravity.y = 300 ;
     	player.body.collideWorldBounds = true ;
     	entities2.add(player); 
+    }
+
+    function despawnLeft()
+    {
+         entities.getAt(0).destroy();
+    }
+
+    function despawnRight()
+    {
+        entities2.getAt(0).destroy();
+    }
+
+    function createTower1(x,y)
+    {
+        tower = game.add.sprite(x,y, 'tower1');
+        tower.enableBody = true ;
+        game.physics.arcade.enable(tower);
+        tower.body.immovable = true;
+        tower.scale.setTo(0.5, 1);
+        towers1.add(tower);
+    }
+
+    function createTower2(x,y)
+    {
+        tower = game.add.sprite(x,y, 'tower2');
+        tower.enableBody = true ;
+        game.physics.arcade.enable(tower);
+        tower.scale.setTo(0.5, 1);
+        tower.body.immovable = true;
+        towers2.add(tower);
     }
 
     </script>
