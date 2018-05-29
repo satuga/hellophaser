@@ -10,111 +10,302 @@
     <body>
 
     <script type="text/javascript">
-
+    //START variables
     var game = new Phaser.Game(1600, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
-    var platforms;
-    var player;
-    var entities;
-    var entities2;
-    var hitPlatform;
-    var hitPlatform2;
-    var colentitiesentities2;
-    var colentitiestower;
-    var colentities2tower;
+    var ground;
+
+    var badGuyLeftOne;
+    var badGuyRightOne;
+
+    var badGuyLeftTwo;
+    var badGuyRightTwo;
+
+    var collisionBadGuyLeftOneWithGround;
+    var collisionBadGuyRightOneWithGround;
+    var collisionBadGuyLeftTwoWithGround;
+    var collisionBadGuyRightTwoWithGround;
+
+    var collisionBadGuyLeftOneWithRightTower;
+    var collisionBadGuyRightOneWithLeftTower;
+    var collisionBadGuyLeftTwoWithRightTower;
+    var collisionBadGuyRightTwoWithLeftTower;
+
+    var collisionBadGuyLeftOneWithBadGuyRightOne;
+    var collisionBadGuyLeftTwoWithBadGuyRightTwo;
+
     var fired = false;
-    var test;
-    var towers1;
-    var towers2;
-    var tower;
-    var barConfig;
-    var healthbar1;
-    var healthbar2;
-    var healthbar1Num = 100;
-    var healthbar2Num = 100;
-    var coinPurse = 150;
-    var counter = 0;
+
+    var towerLeft;
+    var towerRight;
+
+    var healthBarConfig;
+    var towerHealthLeft;
+    var towerHealthRight;
+
+    var towerHealthLeftNum = 100;
+    var towerHealthRightNum = 100;
+
     var coin;
     var showCoin;
+
+    var coinPurse = 150;
+    var counter = 0;
+    //END variables
+
+    //START CoreGameFunctions
     function preload() 
     {
-   	game.load.spritesheet('coin', 'assets/coin.png', 163, 201);
-   	game.load.bitmapFont('carrier_command', 'assets/fonts/bitmapFonts/carrier_command.png', 'assets/fonts/bitmapFonts/carrier_command.xml');
-    game.load.image('sky', 'assets/background.jpg');
-    game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.image('tower1', 'assets/base1.png');
-    game.load.image('tower2', 'assets/base2.png');
-
+	   	game.load.spritesheet('coin', 'assets/coin.png', 163, 201);
+	   	game.load.bitmapFont('carrier_command', 'assets/fonts/bitmapFonts/carrier_command.png', 'assets/fonts/bitmapFonts/carrier_command.xml');
+	    game.load.image('sky', 'assets/background.jpg');
+	    game.load.image('ground', 'assets/platform.png');
+	    game.load.image('star', 'assets/star.png');
+	    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+	    game.load.image('towerRight', 'assets/base1.png');
+	    game.load.image('towerLeft', 'assets/base2.png');
+	    game.load.spritesheet('baddie', 'assets/baddie.png',32,32);
     }
 
     function create() 
     {
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        var sky = game.add.sprite(0, 0, 'sky');
+        level1();
+    }
+
+    function update() 
+    {
+    	userInputs();
+    	collisionLogic();
+        earnPassiveMoney();
+    }
+    //END CoreGameFunction
+
+    //START BadGuyOneFunctions
+    function spawnBadGuyLeftOne()
+    {
+        var player = game.add.sprite(0,game.world.height-100, 'dude');
+        player.enableBody = true;
+        game.physics.arcade.enable(player);
+        player.animations.add('right', [5, 6, 7, 8], 10, true);
+        player.animations.play('right');
+        player.body.velocity.x = 150;
+        player.body.bounce.y = 0.2;
+        player.body.gravity.y = 300;
+        player.body.collideWorldBounds = true;
+        badGuyLeftOne.add(player);
+        coinPurse -= 50;
+
+    }
+
+    function spawnBadGuyRightOne()
+    {
+    	var player = game.add.sprite(game.world.width-40,game.world.height-100, 'dude');
+    	player.enableBody = true ;
+    	game.physics.arcade.enable(player);
+    	player.animations.add('left', [3, 2, 1, 0], 10, true);
+    	player.animations.play( 'left' );
+    	player.body.velocity.x = -150;
+    	player.body.bounce.y = 0.2;
+    	player.body.gravity.y = 300 ;
+    	player.body.collideWorldBounds = true ;
+    	badGuyRightOne.add(player); 
+    }
+
+    function destroyBadGuyLeftOne()
+    {
+         badGuyLeftOne.getAt(0).destroy();
+         earnKillMoney();
+    }
+
+    function destroyBadGuyRightOne()
+    {
+        badGuyRightOne.getAt(0).destroy();
+    }
+    //END BadGuyOneFunctions
+
+    //START BadGuyTwoFunctions
+    function spawnBadGuyLeftTwo()
+    {
+    	var baddie = game.add.sprite(0,game.world.height-100, 'baddie');
+    	baddie.enableBody = true ;
+    	game.physics.arcade.enable(baddie);
+    	baddie.animations.add('baddieleft', [2, 3], 10, true);
+    	baddie.animations.play( 'baddieleft' );
+    	baddie.body.velocity.x = 200;
+    	baddie.body.bounce.y = 0.2;
+    	baddie.body.gravity.y = 300 ;
+    	baddie.body.collideWorldBounds = true ;
+    	badGuyLeftTwo.add(baddie);
+    }
+
+    function spawnBadGuyRightTwo()
+    {
+    	var baddie = game.add.sprite(game.world.width-40,game.world.height-100, 'baddie');
+    	baddie.enableBody = true ;
+    	game.physics.arcade.enable(baddie);
+    	baddie.animations.add('baddieright', [1, 0], 10, true);
+    	baddie.animations.play( 'baddieright' );
+    	baddie.body.velocity.x = -200;
+    	baddie.body.bounce.y = 0.2;
+    	baddie.body.gravity.y = 300 ;
+    	baddie.body.collideWorldBounds = true ;
+    	badGuyRightTwo.add(baddie);
+    }
+
+    function destroyBadGuyLeftTwo()
+    {
+    	badGuyLeftTwo.getAt(0).destroy();
+    	earnKillMoney();
+    }
+
+    function destroyBadGuyRightTwo()
+    {
+    	badGuyRightTwo.getAt(0).destroy();
+    }
+    //END BadGuyTwoFunctions
+
+    //START TowerFunctions
+    function createTowerLeft(x,y)
+    {
+        var tower = game.add.sprite(x,y, 'towerLeft');
+        tower.enableBody = true ;
+        game.physics.arcade.enable(tower);
+        tower.scale.setTo(0.5, 1);
+        tower.body.immovable = true;
+        towersLeft.add(tower);
+    }
+
+    function createTowerRight(x,y)
+    {
+        var tower = game.add.sprite(x,y, 'towerRight');
+        tower.enableBody = true ;
+        game.physics.arcade.enable(tower);
+        tower.body.immovable = true;
+        tower.scale.setTo(0.5, 1);
+        towersRight.add(tower);
+    }
+    //END TowerFunctions
+
+    //START Coin Funcitons
+    function coin(x,y)
+    {
+    	coin = game.add.sprite(x,y, 'coin');
+    	coin.animations.add('playCoin', [0,1,2], 10, true);
+    	coin.animations.play( 'playCoin');
+    	coin.scale.setTo(.4,.2);
+    }
+    
+    function earnPassiveMoney()
+    {
+    	counter = 1/60;
+        coinPurse += counter;
+        updateText();
+    }
+
+    function earnKillMoney()
+    {
+    	coinPurse += 50;
+    	updateText();
+    }
+
+    function updateText()
+    {
+    	showCoin.setText(parseInt(coinPurse));
+    }
+    //END Coin Functions
+
+    //START HealthbarFunctions
+    function createHealthBar(x,y)
+    {
+    	healthBarConfig = {width: 100, height: 10, x: x, y: y, bg: {color: '#651828'}, bar: {color: '#00ff00'}, animationDuration: 200, flipped: false};
+    	var healthbar = new HealthBar(this.game, healthBarConfig);
+    	return healthbar;
+    }
+    //END HealthbarFunctions
+
+    //START LevelFunctions
+    function level1()
+    {
+    	game.world.removeAll();
+    	var sky = game.add.sprite(0, 0, 'sky');
         sky.scale.setTo(2.5,1);
 
-        entities = game.add.group();
-        entities.enableBody = true;
-        game.physics.arcade.enable(entities);
+        badGuyLeftOne = game.add.group();
+        badGuyLeftOne.enableBody = true;
+        game.physics.arcade.enable(badGuyLeftOne);
 
-        entities2 = game.add.group();
-        entities2.enableBody = true;
-        game.physics.arcade.enable(entities2);
+        badGuyRightOne = game.add.group();
+        badGuyRightOne.enableBody = true;
+        game.physics.arcade.enable(badGuyRightOne);
 
-        towers1 = game.add.group();
-        towers1.enableBody = true;
-        game.physics.arcade.enable(towers1);
+        badGuyLeftTwo = game.add.group();
+        badGuyLeftTwo.enableBody = true;
+        game.physics.arcade.enable(badGuyLeftTwo);
 
-        towers2 = game.add.group();
-        towers2.enableBody = true;
-        game.physics.arcade.enable(towers2);
+        badGuyRightTwo = game.add.group();
+        badGuyRightTwo.enableBody = true;
+        game.physics.arcade.enable(badGuyRightTwo);
 
-        platforms = game.add.group();
-        platforms.enableBody = true;
+        towersLeft = game.add.group();
+        towersLeft.enableBody = true;
+        game.physics.arcade.enable(towersLeft);
 
-        var ground = platforms.create(0, game.world.height - 30, 'ground');
-        ground.scale.setTo(4, 2);
-        ground.body.immovable = true;
+        towersRight = game.add.group();
+        towersRight.enableBody = true;
+        game.physics.arcade.enable(towersRight);
 
-        createTower1(game.world.width - 130,game.world.height-250);
-        createTower2(0,game.world.height-250);
+        ground = game.add.group();
+        ground.enableBody = true;
 
-        barConfig = {width: 100, height: 10, x: 60, y: game.world.height-280, bg: {color: '#651828'}, bar: {color: '#00ff00'}, animationDuration: 200, flipped: false};
-        healthbar1 = new HealthBar(this.game, barConfig);
-        healthbar2 = new HealthBar(this.game, barConfig);
-        healthbar2.setPosition(game.world.width - 55,game.world.height-280);
+        var floor = ground.create(0, game.world.height - 30, 'ground');
+        floor.scale.setTo(4, 2);
+        floor.body.immovable = true;
+
+        createTowerLeft(0,game.world.height-250);
+        createTowerRight(game.world.width - 130,game.world.height-250);
+
+        towerHealthLeft = createHealthBar(60,game.world.height-280);
+        towerHealthRight = createHealthBar(game.world.width - 55,game.world.height-280);
 
         coin(0,0);
+
         showCoin = game.add.text(60,3,coinPurse,{
         	font: "32px Ariel",
         	fill: "#ff0044",
         	align: "center"
         });
-
     }
+    //END LevelFunctions
 
-    function update() 
+    //START UserInputFunctions
+    function userInputs()
     {
-
-		window.addEventListener('keydown', function(event)
+    	window.addEventListener('keydown', function(event)
 		{
 		    if(!fired) 
 		    {
 		        fired = true;
+
 				switch (event.key)
 		      	{
-		     		case "x": // Left
-		     		if(coinPurse >= 50)
-		     		{
-			  			spawnPlayerLeft();
-			  		}
+		      		case "x":
+			     		if(coinPurse >= 50)
+			     		{
+				  			spawnBadGuyLeftOne();
+				  		}
 						break;
 
+		           	case "y":
+		           		spawnBadGuyRightOne();
+		        		break;
 
-		           	case "y": // Right
-		         		spawnPlayerRight();
+		        	case "c":
+		         		spawnBadGuyLeftTwo();
+		        		break;
+
+		        	case "b":
+		         		spawnBadGuyRightTwo();
 		        		break;
 		        }
 		    }
@@ -124,125 +315,73 @@
 		{
 		    fired = false;
 		});
+    }
+    //END UserInputFunctions
 
-        hitPlatform = game.physics.arcade.collide(entities, platforms);
-        hitPlatform2 = game.physics.arcade.collide(entities2, platforms);
-        colentitiesentities2 = game.physics.arcade.collide(entities,entities2);
-        colentitiestower = game.physics.arcade.collide(entities2,towers2);
-        colentities2tower = game.physics.arcade.collide(entities,towers1);
+    //START CollisionLogicFunctions
+    function collisionLogic()
+    {
+    	collisionBadGuyLeftOneWithGround = game.physics.arcade.collide(badGuyLeftOne, ground);
+        collisionBadGuyRightOneWithGround = game.physics.arcade.collide(badGuyRightOne, ground);
+        collisionBadGuyLeftTwoWithGround = game.physics.arcade.collide(badGuyLeftTwo, ground);
+        collisionBadGuyRightTwoWithGround = game.physics.arcade.collide(badGuyRightTwo, ground);
 
-        if(colentitiestower)
+
+        collisionBadGuyLeftOneWithRightTower = game.physics.arcade.collide(badGuyLeftOne,towersRight);
+        collisionBadGuyRightOneWithLeftTower = game.physics.arcade.collide(badGuyRightOne,towersLeft);
+
+        collisionBadGuyLeftTwoWithRightTower = game.physics.arcade.collide(badGuyLeftTwo,towersRight);
+        collisionBadGuyRightTwoWithLeftTower = game.physics.arcade.collide(badGuyRightTwo,towersLeft);
+
+        collisionBadGuyLeftOneWithBadGuyRightOne = game.physics.arcade.collide(badGuyLeftOne,badGuyRightOne);
+        collisionBadGuyLeftTwoWithBadGuyRightTwo = game.physics.arcade.collide(badGuyLeftTwo,badGuyRightTwo);
+
+        if(collisionBadGuyLeftOneWithRightTower)
         {
-            despawnRight();
-            healthbar1Num -= 10;
-            healthbar1.setPercent(healthbar1Num);
+            destroyBadGuyLeftOne();
+            towerHealthRightNum -= 10;
+            towerHealthRight.setPercent(towerHealthRightNum);
         }
 
-        if(colentities2tower)
+        if(collisionBadGuyRightOneWithLeftTower)
         {
-            despawnLeft();
-            healthbar2Num -= 10;
-            healthbar2.setPercent(healthbar2Num);
+            destroyBadGuyRightOne();
+            towerHealthLeftNum -= 10;
+            towerHealthLeft.setPercent(towerHealthLeftNum);
         }
 
-        if(colentitiesentities2)
+        if(collisionBadGuyLeftTwoWithRightTower)
         {
-            despawnRight();
-            despawnLeft();
+        	destroyBadGuyLeftTwo();
+        	towerHealthRightNum -= 10;
+            towerHealthRight.setPercent(towerHealthRightNum);
         }
 
-        if(healthbar1Num <0 || healthbar2Num <= 0)
+        if(collisionBadGuyRightTwoWithLeftTower)
+        {
+        	destroyBadGuyRightTwo();
+        	towerHealthLeftNum -= 10;
+            towerHealthLeft.setPercent(towerHealthLeftNum);
+        }
+
+        if(collisionBadGuyLeftOneWithBadGuyRightOne)
+        {
+            destroyBadGuyLeftOne();
+            destroyBadGuyRightOne();
+        }
+
+        if(collisionBadGuyLeftTwoWithBadGuyRightTwo)
+        {
+        	destroyBadGuyLeftTwo();
+            destroyBadGuyRightTwo();
+        }
+
+        if(towerHealthLeftNum <= 0 || towerHealthRightNum <= 0)
         {
             game.world.removeAll();
         }
-        	earnMoneys();
-        counter = 1/60;
-        coinPurse += counter;
-        updateText();
-
     }
-
-    function spawnPlayerLeft()
-    {
-        player = game.add.sprite(0,game.world.height-100, 'dude');
-        player.enableBody = true;
-        game.physics.arcade.enable(player);
-        player.animations.add('right', [5, 6, 7, 8], 10, true);
-        player.animations.play('right');
-        player.body.velocity.x = 150;
-        player.body.bounce.y = 0.2;
-        player.body.gravity.y = 300;
-        player.body.collideWorldBounds = true;
-        entities.add(player);
-        coinPurse -= 50;
-
-    }
-
-    function spawnPlayerRight()
-    {
-    	player = game.add.sprite(game.world.width-40,game.world.height-100, 'dude');
-    	player.enableBody = true ;
-    	game.physics.arcade.enable(player);
-    	player.animations.add('left', [3, 2, 1, 0], 10, true);
-    	player.animations.play( 'left' );
-    	player.body.velocity.x = -150;
-    	player.body.bounce.y = 0.2;
-    	player.body.gravity.y = 300 ;
-    	player.body.collideWorldBounds = true ;
-    	entities2.add(player); 
-    }
-    function coin(x,y)
-    {
-    	coin = game.add.sprite(x,y, 'coin');
-    	coin.animations.add('playCoin', [0,1,2], 10, true);
-    	coin.animations.play( 'playCoin');
-    	coin.scale.setTo(.4,.2);
-
-    }
-    function despawnLeft()
-    {
-         entities.getAt(0).destroy();
-    }
-
-    function despawnRight()
-    {
-        entities2.getAt(0).destroy();
-        takeMoneys();
-    }
-
-    function createTower1(x,y)
-    {
-        tower = game.add.sprite(x,y, 'tower1');
-        tower.enableBody = true ;
-        game.physics.arcade.enable(tower);
-        tower.body.immovable = true;
-        tower.scale.setTo(0.5, 1);
-        towers1.add(tower);
-    }
-
-    function createTower2(x,y)
-    {
-        tower = game.add.sprite(x,y, 'tower2');
-        tower.enableBody = true ;
-        game.physics.arcade.enable(tower);
-        tower.scale.setTo(0.5, 1);
-        tower.body.immovable = true;
-        towers2.add(tower);
-    }
-    
-    function earnMoneys() // earning gold over time
-    {
-    	//coinPurse = scope.setInterval(+= 5, 1500, [] );
-    }
-
-    function takeMoneys() //killing enemies to earn gold
-    {
-    	coinPurse += 50 ;
-    }
-    function updateText()
-    {
-    	showCoin.setText(parseInt(coinPurse));
-    }
+    //END CollisionLogicFunctions
     </script>
 
 
