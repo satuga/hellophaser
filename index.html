@@ -47,10 +47,13 @@
     var towerHealthRightNum = 100;
 
     var coin;
-    var showCoin;
+    //var showCoin;
 
     var coinPurse = 150;
     var counter = 0;
+
+    var timer;
+	var total = 0;
     //END variables
 
     //START CoreGameFunctions
@@ -78,6 +81,7 @@
     	userInputs();
     	collisionLogic();
         earnPassiveMoney();
+        spawnAI();
     }
     //END CoreGameFunction
 
@@ -137,6 +141,7 @@
     	baddie.body.gravity.y = 300 ;
     	baddie.body.collideWorldBounds = true ;
     	badGuyLeftTwo.add(baddie);
+    	coinPurse -= 100;
     }
 
     function spawnBadGuyRightTwo()
@@ -224,12 +229,37 @@
     }
     //END HealthbarFunctions
 
+    //START Timer (AI) Functions
+    function createTimer()
+    {
+    	timer = game.time.create(false);
+    	timer.loop(2000, updateCounter, this);
+    	timer.start();
+    }
+
+    function updateCounter() 
+    {
+    	total++;
+	}
+
+	function spawnAI()
+	{
+		if(total == 3)
+		{
+			spawnBadGuyRightOne();
+			total = 0;
+		}
+	}
+	//END Timer (AI) Functions
+
     //START LevelFunctions
     function level1()
     {
     	game.world.removeAll();
     	var sky = game.add.sprite(0, 0, 'sky');
         sky.scale.setTo(2.5,1);
+
+        createTimer();
 
         badGuyLeftOne = game.add.group();
         badGuyLeftOne.enableBody = true;
@@ -301,7 +331,10 @@
 		        		break;
 
 		        	case "c":
-		         		spawnBadGuyLeftTwo();
+		        		if(coinPurse >= 100)
+		        		{
+		         			spawnBadGuyLeftTwo();
+		         		}
 		        		break;
 
 		        	case "b":
