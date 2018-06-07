@@ -68,6 +68,7 @@
 	    game.load.image('towerRight', 'assets/base1.png');
 	    game.load.image('towerLeft', 'assets/base2.png');
 	    game.load.spritesheet('baddie', 'assets/baddie.png',32,32);
+	    game.load.image('gameover', 'assets/gameover.png');
     }
 
     function create() 
@@ -411,10 +412,20 @@
 
         if(towerHealthLeftNum <= 0 || towerHealthRightNum <= 0)
         {
-            game.world.removeAll();
+           	game.world.removeAll();
+           	var sky = game.add.sprite(0, 0, 'sky');
+        	sky.scale.setTo(2.5,1);
+        	var floor = game.add.sprite(0, game.world.height - 30, 'ground');
+        	floor.scale.setTo(4, 2);
+            gameOver();
         }
     }
     //END CollisionLogicFunctions
+
+    function gameOver()
+    {
+    	game.add.sprite(600, 150, 'gameover');
+    }
     </script>
 
 
