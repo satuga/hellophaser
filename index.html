@@ -54,6 +54,8 @@
 
     var timer;
 	var total = 0;
+
+	var restart;
     //END variables
 
     //START CoreGameFunctions
@@ -69,6 +71,7 @@
 	    game.load.image('towerLeft', 'assets/base2.png');
 	    game.load.spritesheet('baddie', 'assets/baddie.png',32,32);
 	    game.load.image('gameover', 'assets/gameover.png');
+	    game.load.image('restart', 'assets/restart.png');
     }
 
     function create() 
@@ -299,13 +302,18 @@
         towerHealthLeft = createHealthBar(60,game.world.height-280);
         towerHealthRight = createHealthBar(game.world.width - 55,game.world.height-280);
 
-        coin(0,0);
+        //coin(0,0);
+        coin = game.add.sprite(0,0,'coin');
+    	coin.animations.add('playCoin', [0,1,2], 10, true);
+    	coin.animations.play( 'playCoin');
+    	coin.scale.setTo(.4,.2);
 
         showCoin = game.add.text(60,3,coinPurse,{
         	font: "32px Ariel",
         	fill: "#ff0044",
         	align: "center"
         });
+        
     }
     //END LevelFunctions
 
@@ -412,20 +420,45 @@
 
         if(towerHealthLeftNum <= 0 || towerHealthRightNum <= 0)
         {
-           	game.world.removeAll();
-           	var sky = game.add.sprite(0, 0, 'sky');
-        	sky.scale.setTo(2.5,1);
-        	var floor = game.add.sprite(0, game.world.height - 30, 'ground');
-        	floor.scale.setTo(4, 2);
             gameOver();
         }
+        
     }
     //END CollisionLogicFunctions
 
     function gameOver()
     {
-    	game.add.sprite(600, 150, 'gameover');
+    	game.world.removeAll();
+        var sky = game.add.sprite(0, 0, 'sky');
+       	sky.scale.setTo(2.5,1);
+       	var floor = game.add.sprite(0, game.world.height - 30, 'ground');
+        floor.scale.setTo(4, 2);
+        game.add.sprite(600, 0, 'gameover');
+        restart = game.add.sprite(520, 150, 'restart');
+        restart.inputEnabled = true;
+        restart.events.onInputDown.add(listener,this);
     }
+
+  	function listener()
+  	{
+  		reset();
+  		level1();
+  	}
+
+  	function reset()
+  	{
+  		game.world.removeAll();
+  		fired = false;
+  		towerHealthLeftNum = 100;
+  		towerHealthRightNum = 100;
+
+  		coinPurse = 150;
+  		counter = 0;
+
+  		this.timer.destroy();
+  		total = 0;
+  	}
+
     </script>
 
 
