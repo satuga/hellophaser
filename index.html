@@ -11,15 +11,22 @@
 
     <script type="text/javascript">
     //START variables
-    var game = new Phaser.Game(1600, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(1600, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
     var ground;
+    var tower;
+    var sky;
+    var floor;
+
+    var player;
 
     var badGuyLeftOne;
     var badGuyRightOne;
 
     var badGuyLeftTwo;
     var badGuyRightTwo;
+
+    var baddie;
 
     var collisionBadGuyLeftOneWithGround;
     var collisionBadGuyRightOneWithGround;
@@ -39,6 +46,7 @@
     var towerLeft;
     var towerRight;
 
+    var healthbar;
     var healthBarConfig;
     var towerHealthLeft;
     var towerHealthRight;
@@ -47,31 +55,36 @@
     var towerHealthRightNum = 100;
 
     var coin;
-    //var showCoin;
 
     var coinPurse = 150;
-    var counter = 0;
 
     var timer;
 	var total = 0;
 
 	var restart;
+
+	var RectangleHUD;
+    var SpawnCircles1;
+    var SpawnCircles2;
+    var SpawnCircles3;
     //END variables
 
     //START CoreGameFunctions
     function preload() 
     {
-	   	game.load.spritesheet('coin', 'assets/coin.png', 163, 201);
+	   	game.load.spritesheet('coin', 'assets/coinss.png', 200, 246);
 	   	game.load.bitmapFont('carrier_command', 'assets/fonts/bitmapFonts/carrier_command.png', 'assets/fonts/bitmapFonts/carrier_command.xml');
 	    game.load.image('sky', 'assets/background.jpg');
 	    game.load.image('ground', 'assets/platform.png');
-	    game.load.image('star', 'assets/star.png');
 	    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
 	    game.load.image('towerRight', 'assets/base1.png');
 	    game.load.image('towerLeft', 'assets/base2.png');
 	    game.load.spritesheet('baddie', 'assets/baddie.png',32,32);
 	    game.load.image('gameover', 'assets/gameover.png');
-	    game.load.image('restart', 'assets/restart.png');
+	    game.load.image('restart', 'assets/restarterino.png');
+	    game.load.spritesheet('towergood', 'assets/towergood.png',600,600);
+	    game.load.image('RectHUD', 'assets/RectHUD.png');
+        game.load.image('CircleHUD','assets/CircleHUD.png');
     }
 
     function create() 
@@ -84,15 +97,25 @@
     {
     	userInputs();
     	collisionLogic();
-        earnPassiveMoney();
         spawnAI();
+        earnPassiveMoney();
+    }
+
+    function render()
+    {
+    	//game.debug.body(tower);
     }
     //END CoreGameFunction
 
     //START BadGuyOneFunctions
     function spawnBadGuyLeftOne()
     {
-        var player = game.add.sprite(0,game.world.height-100, 'dude');
+        if(coinPurse < 50)
+        {
+            return;
+        }
+
+        player = game.add.sprite(0,game.world.height-200, 'dude');
         player.enableBody = true;
         game.physics.arcade.enable(player);
         player.animations.add('right', [5, 6, 7, 8], 10, true);
@@ -108,8 +131,8 @@
 
     function spawnBadGuyRightOne()
     {
-    	var player = game.add.sprite(game.world.width-40,game.world.height-100, 'dude');
-    	player.enableBody = true ;
+    	player = game.add.sprite(game.world.width-40,game.world.height-200, 'dude');
+    	player.enableBody = true;
     	game.physics.arcade.enable(player);
     	player.animations.add('left', [3, 2, 1, 0], 10, true);
     	player.animations.play( 'left' );
@@ -135,11 +158,16 @@
     //START BadGuyTwoFunctions
     function spawnBadGuyLeftTwo()
     {
-    	var baddie = game.add.sprite(0,game.world.height-100, 'baddie');
+        if(coinPurse < 100)
+        {
+            return;
+        }
+        
+    	baddie = game.add.sprite(0,game.world.height-200, 'baddie');
     	baddie.enableBody = true ;
     	game.physics.arcade.enable(baddie);
     	baddie.animations.add('baddieleft', [2, 3], 10, true);
-    	baddie.animations.play( 'baddieleft' );
+    	baddie.animations.play('baddieleft');
     	baddie.body.velocity.x = 200;
     	baddie.body.bounce.y = 0.2;
     	baddie.body.gravity.y = 300 ;
@@ -150,15 +178,15 @@
 
     function spawnBadGuyRightTwo()
     {
-    	var baddie = game.add.sprite(game.world.width-40,game.world.height-100, 'baddie');
-    	baddie.enableBody = true ;
+    	baddie = game.add.sprite(game.world.width-40,game.world.height-200, 'baddie');
+    	baddie.enableBody = true;
     	game.physics.arcade.enable(baddie);
     	baddie.animations.add('baddieright', [1, 0], 10, true);
-    	baddie.animations.play( 'baddieright' );
+    	baddie.animations.play('baddieright');
     	baddie.body.velocity.x = -200;
     	baddie.body.bounce.y = 0.2;
-    	baddie.body.gravity.y = 300 ;
-    	baddie.body.collideWorldBounds = true ;
+    	baddie.body.gravity.y = 300;
+    	baddie.body.collideWorldBounds = true;
     	badGuyRightTwo.add(baddie);
     }
 
@@ -177,17 +205,20 @@
     //START TowerFunctions
     function createTowerLeft(x,y)
     {
-        var tower = game.add.sprite(x,y, 'towerLeft');
-        tower.enableBody = true ;
+        tower = game.add.sprite(x,y, 'towergood');
+        tower.animations.add('playgoodTower', [0,1,2,3,4], 1.5, true);
+    	tower.animations.play( 'playgoodTower');
+        tower.enableBody = true;
         game.physics.arcade.enable(tower);
-        tower.scale.setTo(0.5, 1);
+        tower.scale.setTo(0.5, 0.5);
         tower.body.immovable = true;
+        tower.body.setSize(500, 500, -150, 50);
         towersLeft.add(tower);
     }
 
     function createTowerRight(x,y)
     {
-        var tower = game.add.sprite(x,y, 'towerRight');
+        tower = game.add.sprite(x,y, 'towerRight');
         tower.enableBody = true ;
         game.physics.arcade.enable(tower);
         tower.body.immovable = true;
@@ -207,8 +238,7 @@
     
     function earnPassiveMoney()
     {
-    	counter = 1/60;
-        coinPurse += counter;
+        coinPurse += timer.elapsed/1000;
         updateText();
     }
 
@@ -227,8 +257,8 @@
     //START HealthbarFunctions
     function createHealthBar(x,y)
     {
-    	healthBarConfig = {width: 100, height: 10, x: x, y: y, bg: {color: '#651828'}, bar: {color: '#00ff00'}, animationDuration: 200, flipped: false};
-    	var healthbar = new HealthBar(this.game, healthBarConfig);
+    	healthBarConfig = {width: 80, height: 20, x: x, y: y, bg: {color: '#651828'}, bar: {color: '#00ff00'}, animationDuration: 200, flipped: false};
+    	healthbar = new HealthBar(this.game, healthBarConfig);
     	return healthbar;
     }
     //END HealthbarFunctions
@@ -260,8 +290,8 @@
     function level1()
     {
     	game.world.removeAll();
-    	var sky = game.add.sprite(0, 0, 'sky');
-        sky.scale.setTo(2.5,1);
+    	sky = game.add.sprite(0, -100, 'sky');
+        sky.scale.setTo(2,0.75);
 
         createTimer();
 
@@ -292,28 +322,46 @@
         ground = game.add.group();
         ground.enableBody = true;
 
-        var floor = ground.create(0, game.world.height - 30, 'ground');
+        floor = ground.create(0, game.world.height - 130, 'ground');
         floor.scale.setTo(4, 2);
         floor.body.immovable = true;
 
-        createTowerLeft(0,game.world.height-250);
-        createTowerRight(game.world.width - 130,game.world.height-250);
+        createTowerRight(game.world.width - 130,game.world.height-350);
+        createTowerLeft(-84,game.world.height-405);
 
-        towerHealthLeft = createHealthBar(60,game.world.height-280);
-        towerHealthRight = createHealthBar(game.world.width - 55,game.world.height-280);
+        towerHealthLeft = createHealthBar(50,game.world.height-350);
+        towerHealthRight = createHealthBar(game.world.width - 55,game.world.height-380);
 
         //coin(0,0);
-        coin = game.add.sprite(0,0,'coin');
-    	coin.animations.add('playCoin', [0,1,2], 10, true);
+        coin = game.add.sprite(-20,-5,'coin');
+    	coin.animations.add('playCoin', [0,1,2], 7.5, true);
     	coin.animations.play( 'playCoin');
     	coin.scale.setTo(.4,.2);
 
-        showCoin = game.add.text(60,3,coinPurse,{
+        showCoin = game.add.text(60,3,coinPurse,
+        {
         	font: "32px Ariel",
         	fill: "#ff0044",
         	align: "center"
         });
-        
+
+        RectangleHUD = game.add.sprite(-40,535,'RectHUD');
+        RectangleHUD.scale.setTo(1.1,.15);
+
+        SpawnCircles1 = game.add.sprite(355,545,'CircleHUD');
+        SpawnCircles1.scale.setTo(2.5,2.5);
+        SpawnCircles1.inputEnabled = true;
+        SpawnCircles1.events.onInputDown.add(spawnBadGuyLeftOne,this);
+
+        SpawnCircles2 = game.add.sprite(755,545,'CircleHUD');
+        SpawnCircles2.scale.setTo(2.5,2.5);
+        SpawnCircles2.inputEnabled = true;
+        SpawnCircles2.events.onInputDown.add(spawnBadGuyLeftTwo,this);
+
+        SpawnCircles3 = game.add.sprite(1155,545,'CircleHUD');
+        SpawnCircles3.scale.setTo(2.5,2.5);
+        SpawnCircles3.inputEnabled = true;
+        SpawnCircles3.events.onInputDown.add(listener,this);
     }
     //END LevelFunctions
 
@@ -429,12 +477,13 @@
     function gameOver()
     {
     	game.world.removeAll();
-        var sky = game.add.sprite(0, 0, 'sky');
-       	sky.scale.setTo(2.5,1);
-       	var floor = game.add.sprite(0, game.world.height - 30, 'ground');
+        sky = game.add.sprite(0, 0, 'sky');
+       	sky.scale.setTo(2,0.75);
+       	floor = game.add.sprite(0, game.world.height - 30, 'ground');
         floor.scale.setTo(4, 2);
         game.add.sprite(600, 0, 'gameover');
-        restart = game.add.sprite(520, 150, 'restart');
+        restart = game.add.sprite(660,150,'restart');
+        restart.scale.setTo(0.5,0.5);
         restart.inputEnabled = true;
         restart.events.onInputDown.add(listener,this);
     }
